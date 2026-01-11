@@ -15,7 +15,17 @@ A FastAPI application that provides an OpenAI-compatible chat completions endpoi
 ```
 ├── app.py                          # Main FastAPI application
 ├── app.yaml                        # Databricks deployment config
+├── config.py                       # Configuration with Pydantic settings
+├── dependencies.py                 # FastAPI dependency injection
 ├── requirements.txt                # Python dependencies
+├── chat_cli.py                     # Interactive CLI client for testing
+├── agent/
+│   ├── __init__.py
+│   ├── core.py                    # Agent creation and initialization
+│   ├── provider.py                # Multi-provider support (Databricks, Anthropic, etc.)
+│   ├── system_prompt.md           # Agent system prompt (editable)
+│   └── skills/
+│       └── cookie-flavor-generator/  # Example skill
 ├── models/
 │   ├── __init__.py
 │   └── openai_schema.py           # OpenAI-compatible models
@@ -148,21 +158,57 @@ Check service health status.
 
 ## Databricks Deployment
 
-1. Ensure all files are in your Databricks workspace
-2. Deploy using Databricks Apps UI or CLI
-3. The app.yaml configuration will use uvicorn to serve the FastAPI app
-4. Access your app at the provided Databricks Apps URL
+### Quick Start
 
-For detailed deployment instructions, see the [Databricks Apps documentation](https://docs.databricks.com/dev-tools/databricks-apps/).
+**Prerequisites**: Databricks CLI configured with a profile (assumes `~/.databrickscfg` is already set up)
 
-## Current Limitations
+```bash
+# 1. Create the app
+databricks apps create skill-agent --description "Marketing Research Agent"
 
-- This is a dummy implementation - responses are static
-- No actual model inference is performed
-- Streaming is not supported
-- Function calling/tools are not supported
-- Request only accepts `messages` field
-- Response only returns `id`, `object`, `created`, `choices` fields
+# 2. Upload source code
+databricks workspace import-dir . /Workspace/Users/YOUR.EMAIL@company.com/apps/skill-agent --overwrite
+
+# 3. Deploy
+databricks apps deploy skill-agent --source-code-path /Workspace/Users/YOUR.EMAIL@company.com/apps/skill-agent
+
+# 4. Test with chat_cli.py
+python chat_cli.py --url $(databricks apps get skill-agent --output json | jq -r '.url') --databricks-profile DEFAULT
+```
+
+### Detailed Instructions
+
+For comprehensive deployment instructions, troubleshooting, and monitoring, see **[DATABRICKS_DEPLOYMENT.md](./DATABRICKS_DEPLOYMENT.md)**.
+
+This guide covers:
+- Environment configuration
+- Deployment workflow
+- Monitoring and log viewing
+- Testing with authentication
+- Troubleshooting common issues
+- Multiple environments and cost optimization
+
+### Key Points
+
+- **Port**: Databricks Apps expects port 8000 (already configured in `app.yaml`)
+- **Authentication**: Automatically handled by Databricks Apps service principal
+- **Environment**: Configuration in `app.yaml` sets up the agent with Databricks provider
+- **Monitoring**: Use `databricks apps logs your-app-name` to view logs
+
+For more information, see the [Databricks Apps documentation](https://docs.databricks.com/dev-tools/databricks-apps/).
+
+## Current Features
+
+- ✅ Real agent with deep agent system and skills
+- ✅ Multi-provider support (Databricks, Anthropic, OpenAI, Azure)
+- ✅ Cookie flavor generation skill
+- ✅ OpenAI-compatible API format
+- ✅ Conversation context maintained by agent
+- ✅ Databricks CLI profile authentication
+- ✅ Health check endpoint
+- ⏳ Streaming support (not yet implemented)
+- ⏳ Function calling/tools (not yet implemented)
+- ⏳ Additional request parameters (temperature, max_tokens, etc.)
 
 ## Future Enhancements
 

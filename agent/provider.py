@@ -50,14 +50,28 @@ def get_llm_from_provider(
         )
 
     elif provider == "databricks":
-        from langchain_community.chat_models import ChatDatabricks
+        # Try to use the newer databricks-langchain package, fall back to langchain-community
+        try:
+            from databricks_langchain import ChatDatabricks
+        except ImportError:
+            from langchain_community.chat_models import ChatDatabricks
 
-        # Databricks uses SDK for authentication - no need to pass api_key explicitly
-        # SDK will automatically use ~/.databrickscfg or environment variables
+        # Databricks SDK authentication is handled automatically:
+        # 1. Reads from ~/.databrickscfg (created by `databricks configure`)
+        # 2. Uses DATABRICKS_CONFIG_PROFILE env var to select profile
+        # 3. Falls back to DATABRICKS_HOST + DATABRICKS_TOKEN env vars
+        # 4. Uses Azure/AWS/GCP instance metadata if available
+        #
+        # No need to pass api_key or token explicitly - SDK handles it all!
 
+        # For Databricks Foundation Model API (managed models like Claude):
+        # - The endpoint IS the model name (e.g., "databricks-claude-sonnet-4-5")
+        # - This accesses /serving-endpoints/{model_name}/invocations
+        #
+        # For custom model serving endpoints:
+        # - Pass a custom endpoint URL via the endpoint parameter
         return ChatDatabricks(
-            endpoint=endpoint or "databricks",
-            model=model_name,
+            endpoint=endpoint or model_name,  # Use model name as endpoint for foundation models
             **kwargs
         )
 
