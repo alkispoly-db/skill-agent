@@ -1,14 +1,7 @@
-# Databricks OpenAI-Compatible API
+# Example of a skills-based agent
 
-A FastAPI application that provides an OpenAI-compatible chat completions endpoint for deployment on Databricks Apps.
-
-## Features
-
-- OpenAI-compatible `/api/v1/chat/completions` endpoint
-- Simplified request/response models with Pydantic validation
-- Health check endpoint at `/api/v1/healthcheck`
-- Proper error handling with OpenAI-compatible error format
-- Ready for Databricks Apps deployment
+This app shows how to build an agent entirely based on skills and a system prompt. The agent is deployed as a databricks app and exposes an 
+OpenAI-compatible chat/completions endpoint.
 
 ## Project Structure
 
@@ -93,6 +86,13 @@ response = requests.post(
 
 print(response.json())
 ```
+
+Using chat_cli.py (interactive client with conversation history):
+```bash
+python chat_cli.py --host localhost --port 5000
+```
+
+This provides an interactive chat interface where you can have multi-turn conversations with the agent.
 
 ## API Documentation
 
@@ -179,57 +179,6 @@ python chat_cli.py --url $(databricks apps get skill-agent --output json | jq -r
 ### Detailed Instructions
 
 For comprehensive deployment instructions, troubleshooting, and monitoring, see **[DATABRICKS_DEPLOYMENT.md](./DATABRICKS_DEPLOYMENT.md)**.
-
-This guide covers:
-- Environment configuration
-- Deployment workflow
-- Monitoring and log viewing
-- Testing with authentication
-- Troubleshooting common issues
-- Multiple environments and cost optimization
-
-### Key Points
-
-- **Port**: Databricks Apps expects port 8000 (already configured in `app.yaml`)
-- **Authentication**: Automatically handled by Databricks Apps service principal
-- **Environment**: Configuration in `app.yaml` sets up the agent with Databricks provider
-- **Monitoring**: Use `databricks apps logs your-app-name` to view logs
-
-For more information, see the [Databricks Apps documentation](https://docs.databricks.com/dev-tools/databricks-apps/).
-
-## Current Features
-
-- ✅ Real agent with deep agent system and skills
-- ✅ Multi-provider support (Databricks, Anthropic, OpenAI, Azure)
-- ✅ Cookie flavor generation skill
-- ✅ OpenAI-compatible API format
-- ✅ Conversation context maintained by agent
-- ✅ Databricks CLI profile authentication
-- ✅ Health check endpoint
-- ⏳ Streaming support (not yet implemented)
-- ⏳ Function calling/tools (not yet implemented)
-- ⏳ Additional request parameters (temperature, max_tokens, etc.)
-
-## Future Enhancements
-
-When ready to integrate real models:
-
-1. **Add Model Integration:**
-   - Connect to Databricks Model Serving endpoint
-   - Or integrate with Databricks Foundation Model API
-   - Or proxy to external OpenAI API
-
-2. **Extend API Support:**
-   - Add streaming support with SSE
-   - Implement function/tool calling
-   - Add more request parameters (temperature, max_tokens, etc.)
-   - Include usage statistics in response
-
-3. **Production Features:**
-   - Add authentication/authorization
-   - Implement rate limiting
-   - Add comprehensive logging and monitoring
-   - Set up proper error tracking
 
 ## References
 
