@@ -17,6 +17,42 @@ def get_skills_directory() -> str:
     return str(skills_dir.absolute())
 
 
+def get_system_prompt() -> str:
+    """
+    Load the system prompt from the system_prompt.md file.
+
+    Returns:
+        The system prompt string for agent initialization.
+    """
+    current_dir = Path(__file__).parent
+    prompt_file = current_dir / "system_prompt.md"
+
+    try:
+        with open(prompt_file, 'r', encoding='utf-8') as f:
+            content = f.read()
+
+        # Remove the markdown header if present
+        lines = content.strip().split('\n')
+        if lines and lines[0].startswith('# '):
+            # Skip the header line and any empty lines after it
+            content_lines = []
+            skip_header = True
+            for line in lines[1:]:
+                if skip_header and line.strip() == '':
+                    continue
+                skip_header = False
+                content_lines.append(line)
+            return '\n'.join(content_lines).strip()
+
+        return content.strip()
+
+    except FileNotFoundError:
+        raise RuntimeError(
+            f"System prompt file not found: {prompt_file}. "
+            "Please ensure system_prompt.md exists in the agent directory."
+        )
+
+
 def create_agent(
     provider: str = "anthropic",
     model_name: Optional[str] = None,
@@ -36,29 +72,22 @@ def create_agent(
 
     Args:
         provider: Model provider (anthropic, databricks, openai, azure)
-        model_name: Model identifier (provider-specific defaults if None)
+        model_name: Model identifier (required - should be provided by caller)
         api_key: API key for the provider
         endpoint: Custom endpoint (required for Databricks, Azure)
-        workspace_dir: Directory for agent file operations
+        workspace_dir: Directory for agent file operations (required)
         auto_approve: If True, automatically approve agent actions
         **provider_kwargs: Additional provider-specific parameters
 
     Returns:
         Configured deep agent instance
     """
-    # Set provider-specific default models if not specified
+    # Validate required parameters (config.py should always provide these)
     if model_name is None:
-        defaults = {
-            "anthropic": "claude-sonnet-4-5-20250929",
-            "databricks": "databricks-claude-sonnet-4-5",
-            "openai": "gpt-4-turbo",
-            "azure": "gpt-4",
-        }
-        model_name = defaults.get(provider)
+        raise ValueError(f"model_name is required for provider: {provider}")
 
-    # Set up workspace directory
     if workspace_dir is None:
-        workspace_dir = str(Path.cwd() / "workspace")
+        raise ValueError("workspace_dir is required")
 
     workspace_path = Path(workspace_dir)
     workspace_path.mkdir(exist_ok=True)
@@ -75,33 +104,11 @@ def create_agent(
         **provider_kwargs
     )
 
-    # System prompt for marketing team product research agent
-    system_prompt = """You are a product research assistant helping the marketing team with various research tasks.
-
-Your role is to assist with:
-- Product ideation and concept development
-- Market research and competitive analysis
-- Creative product naming and positioning
-- Consumer insights and trend analysis
-- Product feature exploration
-
-You have access to specialized skills including cookie flavor generation, which you should use
-when relevant to product development tasks. Apply your knowledge thoughtfully and provide
-actionable insights that help the marketing team make informed decisions.
-
-When working on product research:
-- Consider market trends and consumer preferences
-- Think about competitive positioning
-- Evaluate feasibility and practical execution
-- Provide creative yet realistic recommendations
-- Support your suggestions with reasoning
-
-Be professional, analytical, and creative in your responses."""
-
-    # Configure interrupt behavior
-    interrupt_on = [] if auto_approve else ["task"]
+    # Load system prompt from markdown file
+    system_prompt = get_system_prompt()
 
     # Create the agent with skills
+    # For API usage (auto_approve=True), interrupts are disabled (interrupt_on=None)
     agent = create_deep_agent(
         model=llm,
         system_prompt=system_prompt,
@@ -110,7 +117,7 @@ Be professional, analytical, and creative in your responses."""
             root_dir=str(workspace_path),
             virtual_mode=True
         ),
-        interrupt_on=interrupt_on,
+        interrupt_on=None if auto_approve else {"task": True},
         name="marketing-research-agent",
     )
 
