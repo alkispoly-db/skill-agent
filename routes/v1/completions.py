@@ -6,7 +6,7 @@ import time
 import logging
 from typing import List, Dict, Any
 
-from fastapi import APIRouter, HTTPException, status, Depends
+from fastapi import APIRouter, HTTPException, status, Depends, Request
 
 from models.openai_schema import (
     ChatCompletionRequest,
@@ -16,10 +16,30 @@ from models.openai_schema import (
     ChatMessage,
     ErrorResponse,
 )
-from dependencies import get_agent
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
+
+
+def get_agent(request: Request) -> Any:
+    """
+    Get the shared agent instance from application state.
+
+    Args:
+        request: FastAPI request object
+
+    Returns:
+        The initialized agent instance
+
+    Raises:
+        RuntimeError: If agent is not initialized
+    """
+    if not hasattr(request.app.state, "agent"):
+        raise RuntimeError(
+            "Agent not initialized. Check application startup logs for errors."
+        )
+
+    return request.app.state.agent
 
 
 def convert_openai_to_agent_messages(messages: List[ChatMessage]) -> List[Dict[str, str]]:

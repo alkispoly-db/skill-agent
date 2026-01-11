@@ -9,7 +9,6 @@ OpenAI-compatible chat/completions endpoint.
 ├── app.py                          # Main FastAPI application
 ├── app.yaml                        # Databricks deployment config
 ├── config.py                       # Configuration with Pydantic settings
-├── dependencies.py                 # FastAPI dependency injection
 ├── requirements.txt                # Python dependencies
 ├── chat_cli.py                     # Interactive CLI client for testing
 ├── agent/
