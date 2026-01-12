@@ -109,13 +109,14 @@ def create_agent(
 
     # Create the agent with skills
     # For API usage (auto_approve=True), interrupts are disabled (interrupt_on=None)
+    # Note: virtual_mode=False allows skills to be read from the filesystem
     agent = create_deep_agent(
         model=llm,
         system_prompt=system_prompt,
         skills=[skills_dir],
         backend=FilesystemBackend(
             root_dir=str(workspace_path),
-            virtual_mode=True
+            virtual_mode=False
         ),
         interrupt_on=None if auto_approve else {"task": True},
         name="marketing-research-agent",
