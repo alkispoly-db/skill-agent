@@ -17,18 +17,12 @@ databricks apps create skill-agent \
 ### 2. Upload Source Code
 
 ```bash
-# Create workspace directory
-databricks workspace mkdirs /Workspace/Users/YOUR.EMAIL@company.com/apps/skill-agent
-
-# Upload files (from project root)
-cd /path/to/skill-agent
-databricks workspace import-dir . \
-  /Workspace/Users/YOUR.EMAIL@company.com/apps/skill-agent \
-  --overwrite \
-  --exclude-hidden-files
+# Sync code to workspace (excludes .venv, .git, etc.)
+databricks sync --exclude-from .syncignore . \
+  /Workspace/Users/YOUR.EMAIL@company.com/apps/skill-agent
 ```
 
-**Note**: The `.databricksignore` file excludes `.venv`, `__pycache__`, and other unnecessary files.
+**Note**: The `.syncignore` file excludes `.venv`, `.git`, `__pycache__`, and other unnecessary files from upload.
 
 ### 3. Deploy
 
@@ -172,20 +166,23 @@ curl -X POST \
 ```bash
 # Make changes to your code locally
 
-# Re-upload files
-databricks workspace import-dir . \
-  /Workspace/Users/YOUR.EMAIL@company.com/apps/skill-agent \
-  --overwrite
+# Sync updated files
+databricks sync --exclude-from .syncignore . \
+  /Workspace/Users/YOUR.EMAIL@company.com/apps/skill-agent
 
-# Redeploy
+# Redeploy (this will automatically restart the app)
 databricks apps deploy skill-agent \
   --source-code-path /Workspace/Users/YOUR.EMAIL@company.com/apps/skill-agent
 ```
 
-### Restart App
+### Manual Stop/Start
 
 ```bash
-databricks apps restart skill-agent
+# Stop the app
+databricks apps stop skill-agent
+
+# Start the app (triggers redeployment)
+databricks apps start skill-agent
 ```
 
 ---

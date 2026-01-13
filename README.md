@@ -165,8 +165,8 @@ Check service health status.
 # 1. Create the app
 databricks apps create skill-agent --description "Marketing Research Agent"
 
-# 2. Upload source code
-databricks workspace import-dir . /Workspace/Users/YOUR.EMAIL@company.com/apps/skill-agent --overwrite
+# 2. Sync source code (excludes .venv, .git, etc.)
+databricks sync --exclude-from .syncignore . /Workspace/Users/YOUR.EMAIL@company.com/apps/skill-agent
 
 # 3. Deploy
 databricks apps deploy skill-agent --source-code-path /Workspace/Users/YOUR.EMAIL@company.com/apps/skill-agent
